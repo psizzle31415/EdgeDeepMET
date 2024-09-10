@@ -11,17 +11,17 @@ class GraphMETNetwork(nn.Module):
        
         self.datanorm = norm
 
-        self.embed_charge = nn.Embedding(3, hidden_dim//4)
-        self.embed_pdgid = nn.Embedding(7, hidden_dim//4)
+        self.embed_charge = nn.Embedding(3, hidden_dim//4) # 3 -> 8
+        self.embed_pdgid = nn.Embedding(7, hidden_dim//4) # 7 -> 8
         
         # Removed embed_continuous since it is not used
 
         self.embed_categorical = nn.Sequential(nn.Linear(2 * hidden_dim // 4, hidden_dim // 2),
-                                               nn.ELU())
+                                               nn.ELU()) # 16 -> 16
 
         self.encode_all = nn.Sequential(nn.Linear(hidden_dim, hidden_dim),
-                                        nn.ELU())
-        self.bn_all = nn.BatchNorm1d(hidden_dim)
+                                        nn.ELU()) # 32 -> 32
+        self.bn_all = nn.BatchNorm1d(hidden_dim) # 32
  
         self.conv_continuous = nn.ModuleList()        
         for i in range(conv_depth):
@@ -31,13 +31,12 @@ class GraphMETNetwork(nn.Module):
             self.conv_continuous[-1].append(nn.BatchNorm1d(hidden_dim))
 
         self.output = nn.Sequential(nn.Linear(hidden_dim, hidden_dim // 2),
-                                    nn.ELU(),
-                                    nn.Linear(hidden_dim // 2, output_dim))
+                                    nn.ELU(), # 32 -> 16
+                                    nn.Linear(hidden_dim // 2, output_dim)) # 16 -> 1
 
         self.pdgs = [1, 2, 11, 13, 22, 130, 211]
 
     def forward(self, x_cont, x_cat, edge_index, batch):
-        # Normalization step, but not used
         x_cont *= self.datanorm
 
         # Embedding categorical features
@@ -49,7 +48,11 @@ class GraphMETNetwork(nn.Module):
         emb_pdg = self.embed_pdgid(pdg_remap)
 
         emb_cat = self.embed_categorical(torch.cat([emb_chrg, emb_pdg], dim=1))
-        emb = self.bn_all(self.encode_all(emb_cat))
+        
+        combined_emb = torch.cat([emb_cat, x_cont], dim=1)
+        
+        emb = self.bn_all(self.encode_all(combined_emb))
+
                 
         # Graph convolution for categorical variables
         for co_conv in self.conv_continuous:
