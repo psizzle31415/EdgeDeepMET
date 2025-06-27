@@ -22,6 +22,32 @@ pip install torch-geometric
 pip install coffea
 pip install mplhep
 ```
+If running on one of the rogue machines (rogue01, rogue02), use micromamba instead of conda. That is, instead of above commands: 
+
+```
+# 1. Create and activate new environment with python and cudatoolkit 10.2
+micromamba create -n pyg112 python=3.9 cudatoolkit=10.2 -c conda-forge -y
+micromamba activate pyg112
+
+# 2. Install PyTorch 1.12.0 + CUDA 10.2 wheels from official PyTorch pip repo
+pip install torch==1.12.0+cu102 torchvision==0.13.0+cu102 torchaudio==0.12.0 \
+  -f https://download.pytorch.org/whl/torch_stable.html
+
+# 3. Install PyTorch Geometric extensions 
+pip install torch-scatter==2.1.0+pt112cu102 -f https://pytorch-geometric.com/whl/torch-1.12.0+cu102.html
+pip install torch-sparse==0.6.15+pt112cu102 -f https://pytorch-geometric.com/whl/torch-1.12.0+cu102.html
+pip install torch-cluster==1.6.0+pt112cu102 -f https://pytorch-geometric.com/whl/torch-1.12.0+cu102.html
+pip install torch-spline-conv==1.2.1+pt112cu102 -f https://pytorch-geometric.com/whl/torch-1.12.0+cu102.html
+
+# 4. Install torch-geometric meta package 
+pip install torch-geometric
+
+# 5. Other Python packages
+pip install coffea mplhep
+
+```
+
+
 
 ## Produce Input Data
 
